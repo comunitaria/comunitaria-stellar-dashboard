@@ -1,0 +1,33 @@
+#datatablefiltro_menu{
+	padding:10px;
+	min-width:140px;
+}
+.datatablefiltro_opcion{
+	padding-top:5px;
+	padding-bottom:5px;
+}
+.datatablefiltro_opcion small.activo{
+	color: var(--primary);
+}
+#datatablefiltro_inputText{
+	width:80%;
+}
+.datatablefiltro_opcion:hover{
+	cursor: pointer;
+
+}
+#datatablefiltro_menu hr{
+	margin:3px 0px 3px 0px;
+}
+#datatablefiltro_info .form-control{
+	font-size: 12px;
+	margin:10px 20px 10px 20px;
+	width:auto;
+}
+
+.iconofiltro{
+	margin-left:10px;
+	display: none;
+	color: #888888;
+}
+
