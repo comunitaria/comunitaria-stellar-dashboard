@@ -5,7 +5,7 @@ namespace Modulos\Pagina\Models;
 use CodeIgniter\Model;
 // Use App\Models;
 
-class Cls_grupos_p extends App\Models\Cls_grupos
+class Cls_grupos_p extends \App\Models\Cls_grupos
 {
 
     protected $table      = 'grupos';

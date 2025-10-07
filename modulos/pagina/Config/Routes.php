@@ -1,5 +1,5 @@
 <?php 
-use Codeigniter\Router\RouteCollection;
+use CodeIgniter\Router\RouteCollection;
 
 $routes->get('/usuarios', '\Modulos\Pagina\Controllers\Usuarios::index'); //Vpconf: ['usuarios','meBucP','2']
 

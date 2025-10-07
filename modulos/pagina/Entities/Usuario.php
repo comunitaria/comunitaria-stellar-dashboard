@@ -21,7 +21,7 @@ class Usuario extends \App\Entities\Usuario
             return [];
     }
     function grupos(){
-        return model('\Modulos\Pagina\Models\Cls_grupos')->join('usuarios_grupos','usuarios_grupos.id_grupo=grupos.id_grupo')->where('usuarios_grupos.id_usr='.$this->id_usr)->findAll();
+        return model('\Modulos\Pagina\Models\Cls_grupos_p')->join('usuarios_grupos','usuarios_grupos.id_grupo=grupos.id_grupo')->where('usuarios_grupos.id_usr='.$this->id_usr)->findAll();
     }
     function colas(){
         $grupos=$this->grupos();

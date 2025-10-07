@@ -121,6 +121,56 @@ moneda.XLM.maximo=3.0
 ```
 Finalmente, los valores de XLM (Lumens) hacen referencia a la reposición automática de XLM a los usuarios. La entidad coordinadora mantiene en todo momento un saldo en todas las cuentas asociadas entre los límites fijados en entos parámetros (cuando se detecta un saldo inferior al mínimo se realiza una recarga que lleva el saldo al valor máximo). 
 
+### Puesta en marcha rápida en Stellar (TESTNET)
+1. Generar cuentas emisora y distribuidora:
+   - Abrir https://laboratory.stellar.org (Testnet).
+   - Menú Account → Keypair Generator → generar 2 pares (Issuer, Distributor).
+   - En cada clave pública pulsar “Fund via Friendbot”.
+2. Configurar `.env`:
+   - `moneda.red='testnet'`.
+   - Guardar en `moneda.emisora.publica` y `moneda.distribuidora.publica` la clave PÚBLICA SIN la letra inicial `G`.
+   - Guardar en `moneda.emisora.privada` y `moneda.distribuidora.privada` la semilla SECRETA SIN la letra inicial `S`.
+   - El código ya antepone `G` / `S` cuando construye las llaves, por eso se guardan sin prefijo.
+   - `moneda.nombre` debe ser entre 1 y 4 caracteres (usa AssetTypeCreditAlphanum4).
+3. Crear la trustline (Distributor → Asset):
+   - Laboratory → Transaction Builder.
+   - Fuente (Source Account): clave pública del Distributor.
+   - Add Operation → Change Trust.
+     * Asset Code = tu `moneda.nombre`.
+     * Issuer = clave pública del Issuer (con `G`).
+   - Submit (firmar con semilla del Distributor).
+4. Emitir el activo (primer pago Issuer → Distributor):
+   - Nueva transacción: Source = Issuer.
+   - Operation → Payment.
+     * Destination = Distributor (clave pública).
+     * Asset = (Custom Asset) Code = `moneda.nombre`, Issuer = Issuer.
+     * Amount = cantidad inicial (ej. 1000).
+   - Firmar con la semilla del Issuer y Submit.
+5. Verificar:
+   - Laboratory → Account Viewer (Distributor) → ver balances: debe aparecer el asset y XLM.
+   - En la app puedes llamar a `\Modulos\Pagina\Libraries\Stellar::balances()` para confirmar.
+6. Parámetros XLM automáticos:
+   - `moneda.XLM.minimo` / `moneda.XLM.maximo` definen el rango de recarga automática de XLM para cuentas de usuarios (cron).
+   - Usa un margen razonable (p.ej. 2.5 / 5.0) para evitar recargas demasiado frecuentes.
+7. Resets de Testnet:
+   - La red testnet se reinicia periódicamente (trimestral aprox.). Se pierden cuentas, balances y trustlines.
+   - Las claves siguen siendo válidas; basta con volver a Friendbot + trustline + primer pago.
+8. Producción (`moneda.red='public'`):
+   - Generar NUEVAS claves (no reutilizar testnet).
+   - Fondéalas con XLM reales (exchange o canal oficial).
+   - Repetir pasos 3 y 4 (sin Friendbot).
+   - Proteger `.env` (no commitear, permisos 640) y considerar almacenar semillas en un vault.
+   - Revisar flags si deseas requerir autorización (Set Options → Auth Required) antes de distribuir el asset.
+9. Seguridad básica:
+   - Nunca exponer semillas en logs ni en el repositorio.
+   - Rotar semillas comprometidas moviendo fondos a una nueva cuenta emisora/distribuidora y actualizando `.env`.
+
+Snippet de verificación rápida (tinker o script temporal):
+```php
+$st = new \Modulos\Pagina\Libraries\Stellar();
+print_r($st->balances('CLAVE_DISTRIBUIDORA_SIN_G'));
+```
+
 ### Otras Configuraciones
 
 El proceso "cron" debe ser ejecutado cada 5 minutos, implementando la supercisión de la red. Para ello, se incluirá la siguiente línea en el fichero de configuración del demonio _cron_:
@@ -139,3 +189,8 @@ El proceso "cron" debe ser ejecutado cada 5 minutos, implementando la supercisi�
 **Contraseña por defecto = `1`**
 
 A la mayor brevedad, cambie esta contraseña trivial en su perfil de usuario.
+
+
+# To run in development
+
+php spark serve

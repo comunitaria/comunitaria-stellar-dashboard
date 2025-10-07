@@ -48,7 +48,27 @@ class Cls_comercios extends Model
     }
     public function deClase($idClase){
             $db=db_connect();
-            $listaComercios=$db->query('SELECT comercio, IFNULL(cuentas.clave,"") AS clave FROM clases_comercio LEFT JOIN comercios ON comercios.id=clases_comercio.comercio LEFT JOIN cuentas ON cuentas.id=comercios.cuenta WHERE comercios.activo=1 AND NOT ISNULL(cuentas.clave) AND cuentas.autorizada=1 AND cuentas.bloqueada=0 '.($idClase!=0?'AND clase='.$idClase:''))->getResult();
+            if ((int)$idClase === 0) {
+                // List all active comercios with valid (authorized, not blocked) accounts, regardless of classes
+                $listaComercios=$db->query('SELECT comercios.id AS comercio, IFNULL(cuentas.clave,"") AS clave 
+                                            FROM comercios 
+                                            LEFT JOIN cuentas ON cuentas.id=comercios.cuenta 
+                                            WHERE comercios.activo=1 
+                                              AND NOT ISNULL(cuentas.clave) 
+                                              AND cuentas.autorizada=1 
+                                              AND cuentas.bloqueada=0')->getResult();
+            } else {
+                // Filter by specific class
+                $listaComercios=$db->query('SELECT clases_comercio.comercio AS comercio, IFNULL(cuentas.clave,"") AS clave 
+                                            FROM clases_comercio 
+                                            LEFT JOIN comercios ON comercios.id=clases_comercio.comercio 
+                                            LEFT JOIN cuentas ON cuentas.id=comercios.cuenta 
+                                            WHERE comercios.activo=1 
+                                              AND NOT ISNULL(cuentas.clave) 
+                                              AND cuentas.autorizada=1 
+                                              AND cuentas.bloqueada=0 
+                                              AND clases_comercio.clase='.(int)$idClase)->getResult();
+            }
             $listaIds=[];
             $cuentas=[];
             foreach ($listaComercios as $unComercio) {

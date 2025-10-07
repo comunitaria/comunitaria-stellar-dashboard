@@ -14,8 +14,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `comunitaria`
 --
-CREATE DATABASE IF NOT EXISTS `comunitaria1` DEFAULT CHARACTER SET latin1 COLLATE latin1_spanish_ci;
-USE `comunitaria1`;
+CREATE DATABASE IF NOT EXISTS `comunitaria` DEFAULT CHARACTER SET latin1 COLLATE latin1_spanish_ci;
+USE `comunitaria`;
 
 -- --------------------------------------------------------
 

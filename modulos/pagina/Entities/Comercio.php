@@ -10,6 +10,14 @@ class Comercio extends UsuarioILLA
         else
             return base_url('public/assets/imagenes/logos').'/logoDf.png';
     }
+    private function logoFilePath(): string
+    {
+        $file = ROOTPATH . 'public/assets/imagenes/logos/logo'.$this->id.'.png';
+        if ($this->logo && file_exists($file)) {
+            return $file;
+        }
+        return ROOTPATH . 'public/assets/imagenes/logos/logoDf.png';
+    }
     public function getClases(){
         $db=db_connect();
         $clases=[];
@@ -45,7 +53,15 @@ class Comercio extends UsuarioILLA
         $db->query('DELETE FROM clases WHERE id NOT IN (SELECT clase FROM clases_comercio UNION SELECT beneficiarios.clase FROM beneficiarios)');        
     }
     public function getInfo(){
-        $miCuenta=model('Modulos\Pagina\Models\Cls_cuentas')->find($this->cuenta);
+        $miCuenta=model('Modulos\\Pagina\\Models\\Cls_cuentas')->find($this->cuenta);
+        $logoData='';
+        $path=$this->logoFilePath();
+        if (is_readable($path)) {
+            $raw=@file_get_contents($path);
+            if ($raw!==false) {
+                $logoData='data:image/png;base64,'.base64_encode($raw);
+            }
+        }
         return [
             "id"=> $this->id,
             "nombre"=> $this->nombre,
@@ -56,7 +72,7 @@ class Comercio extends UsuarioILLA
             "movil"=> $this->movil??'',
             "correo"=> $this->correo??'',
             "coordenadas"=> $this->coordenadas??'',
-            "logo"=> 'data:image/png;base64,' . base64_encode(file_get_contents($this->ficheroLogo())) ,
+            "logo"=> $logoData,
         ];
     }
     public function transaccionesMensuales($meses){

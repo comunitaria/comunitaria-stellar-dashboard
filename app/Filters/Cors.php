@@ -20,28 +20,31 @@ class Cors implements FilterInterface
         /** @var ResponseInterface $response */
         $response = service('response');
 
-        // Set your Origin.
-        $response->setHeader('Access-Control-Allow-Origin', '*');
+        // Reflect Origin when provided, else allow all
+        $origin = $request->getHeaderLine('Origin') ?: '*';
+        $response->setHeader('Access-Control-Allow-Origin', $origin);
+        $response->setHeader('Vary', 'Origin');
 
-        // Set this header if the client sends Cookies.
-        // $response->setHeader('Access-Control-Allow-Credentials', 'true');
+        // $response->setHeader('Access-Control-Allow-Credentials', 'true'); // enable only if you use cookies/credentials
 
         if ($request->is('OPTIONS')) {
             $response->setStatusCode(204);
 
-            // Set headers to allow.
-            $response->setHeader(
-                'Access-Control-Allow-Headers',
-                'X-API-KEY, X-Requested-With, Content-Type, Accept, Authorization'
-            );
+            // Allow requested headers (covers custom headers like ngrok-skip-browser-warning)
+            $allowHeaders = $request->getHeaderLine('Access-Control-Request-Headers');
+            if ($allowHeaders === '') {
+                $allowHeaders = 'X-API-KEY, X-Requested-With, Content-Type, Accept, Authorization, ngrok-skip-browser-warning';
+            }
+            $response->setHeader('Access-Control-Allow-Headers', $allowHeaders);
 
-            // Set methods to allow.
+            // Allow requested method or a safe default set
+            $allowMethod = $request->getHeaderLine('Access-Control-Request-Method');
             $response->setHeader(
                 'Access-Control-Allow-Methods',
-                'GET, POST, OPTIONS, PUT, PATCH, DELETE'
+                $allowMethod !== '' ? $allowMethod : 'GET, POST, OPTIONS, PUT, PATCH, DELETE'
             );
 
-            // Set how many seconds the results of a preflight request can be cached.
+            // Cache preflight result
             $response->setHeader('Access-Control-Max-Age', '3600');
 
             return $response;
@@ -55,5 +58,9 @@ class Cors implements FilterInterface
      */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        // Ensure CORS headers present on actual responses as well
+        $origin = $request->getHeaderLine('Origin') ?: '*';
+        $response->setHeader('Access-Control-Allow-Origin', $origin);
+        $response->setHeader('Vary', 'Origin');
     }
 }
