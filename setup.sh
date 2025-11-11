@@ -118,10 +118,28 @@ if [ "$STELLAR_NETWORK" = "testnet" ]; then
 fi
 
 if [ "$STELLAR_NETWORK" = "public" ]; then
-    echo -e "${RED}For MAINNET:${NC}"
-    echo "  1. Generate keypairs using: https://laboratory.stellar.org/#account-creator"
-    echo "  2. Fund both accounts with XLM (minimum 2-3 XLM each)"
+    echo -e "${RED}For MAINNET (Production):${NC}"
+    echo ""
+    echo "IMPORTANT: Generate NEW keypairs - NEVER reuse testnet keys!"
+    echo ""
+    echo "Option 1 - Stellar Laboratory (Web):"
+    echo "  1. Go to: https://laboratory.stellar.org/#account-creator?network=public"
+    echo "  2. Click 'Generate keypair' for ISSUER account"
+    echo "  3. Save BOTH keys securely (use password manager or vault)"
+    echo "  4. Repeat for DISTRIBUTOR account"
+    echo ""
+    echo "Option 2 - Command Line (More Secure):"
+    echo "  Install Stellar SDK: npm install -g stellar-sdk"
+    echo "  Generate keypair:"
+    echo "    node -e \"const StellarSdk = require('stellar-sdk'); const pair = StellarSdk.Keypair.random(); console.log('Public:', pair.publicKey()); console.log('Secret:', pair.secret());\""
+    echo ""
+    echo "After generating keypairs:"
+    echo "  1. Fund BOTH accounts with XLM (minimum 3-5 XLM each recommended)"
+    echo "     - Use an exchange (Coinbase, Kraken, etc.)"
+    echo "     - Or use a Stellar wallet service"
+    echo "  2. Verify funding at: https://stellar.expert"
     echo "  3. NEVER share or commit these keys!"
+    echo "  4. Store backups in a secure location (encrypted, offline)"
     echo ""
 fi
 
