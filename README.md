@@ -220,6 +220,8 @@ The setup script will guide you through:
 # 1. Start services
 docker-compose up -d
 
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
+
 # 2. Initialize Stellar asset
 docker-compose exec app php scripts/setup_illa.php 10000
 
