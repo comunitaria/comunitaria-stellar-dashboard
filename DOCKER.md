@@ -14,25 +14,67 @@ This will guide you through:
 - Generating JWT secrets for API
 - Configuring Stellar keypairs (issuer/distributor)
 - Setting XLM balance thresholds
+- Optional: Automatically build and start containers
+- Optional: Initialize the Stellar asset
 
-### 2. Start the Application
+**Note:** The script uses `compose.env` for Docker Compose environment variables (separate from application `.env`).
+
+### 2. Start the Application (if not done by setup.sh)
+
+**For Testnet (development):**
 ```bash
-docker-compose up -d
+# Build images
+docker compose -f docker-compose.yml build --no-cache
+
+# Start containers
+docker compose -f docker-compose.yml up -d
 ```
 
-### 3. Initialize the Stellar Asset
+**For Mainnet (production):**
 ```bash
-# For testnet with 10,000 initial supply
-docker-compose exec app php scripts/setup_illa.php 10000
+# Build images (includes nginx + SSL support)
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
 
-# For mainnet - use your desired initial supply
-docker-compose exec app php scripts/setup_illa.php 1000000
+# Start containers
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+**Important:** Use `--env-file compose.env` for production to avoid conflicts with the application's `.env` file.
+
+### 3. Initialize the Stellar Asset (if not done by setup.sh)
+
+**For Testnet:**
+```bash
+docker compose -f docker-compose.yml exec app php scripts/setup_illa.php 10000
+```
+
+**For Mainnet:**
+```bash
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec app php scripts/setup_illa.php 1000000
 ```
 
 ### 4. Access the Dashboard
 - Open your browser to the configured base URL (default: http://localhost:8080)
 - Login with default credentials: `adm` / `1`
 - **Change the password immediately!**
+
+---
+
+## Environment Files
+
+This setup uses TWO environment files:
+
+1. **`.env`** - Application configuration (CodeIgniter, database, Stellar keys)
+   - Created by `setup.sh`
+   - Used by the PHP application at runtime
+   - Contains Stellar keys, JWT secrets, database credentials
+
+2. **`compose.env`** (optional, for production) - Docker Compose environment variables
+   - Only needed for production with `docker-compose.prod.yml`
+   - Contains variables for Docker networking and container configuration
+   - Separate from application config to avoid conflicts
+
+**Security:** Both files should have `chmod 600` permissions and never be committed to version control.
 
 ---
 
@@ -171,43 +213,94 @@ The `scripts/setup_illa.php` script performs:
 2. Issues initial supply from Issuer to Distributor
 3. Verifies configuration
 
+**Testnet:**
 ```bash
-# Run after starting docker-compose
-docker-compose exec app php scripts/setup_illa.php <amount>
+docker compose -f docker-compose.yml exec app php scripts/setup_illa.php <amount>
+```
+
+**Mainnet:**
+```bash
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec app php scripts/setup_illa.php <amount>
 ```
 
 ---
 
 ## Docker Commands
 
+All commands below use the appropriate compose file(s) for your environment.
+
+**For Testnet (development):**
+- Use: `docker compose -f docker-compose.yml`
+
+**For Mainnet (production):**
+- Use: `docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml`
+
 ### Start Services
+
+**Testnet:**
 ```bash
-docker-compose up -d
+docker compose -f docker-compose.yml up -d
+```
+
+**Mainnet:**
+```bash
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ### Stop Services
+
+**Testnet:**
 ```bash
-docker-compose down
+docker compose -f docker-compose.yml down
+```
+
+**Mainnet:**
+```bash
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml down
 ```
 
 ### View Logs
+
+**Testnet:**
 ```bash
 # All services
-docker-compose logs -f
+docker compose -f docker-compose.yml logs -f
 
 # Specific service
-docker-compose logs -f app
-docker-compose logs -f db
+docker compose -f docker-compose.yml logs -f app
+```
+
+**Mainnet:**
+```bash
+# All services
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml logs -f
+
+# Specific service
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml logs -f app
 ```
 
 ### Access Application Container
+
+**Testnet:**
 ```bash
-docker-compose exec app bash
+docker compose -f docker-compose.yml exec app bash
+```
+
+**Mainnet:**
+```bash
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec app bash
 ```
 
 ### Access Database
+
+**Testnet:**
 ```bash
-docker-compose exec db mysql -u comunitaria_user -p comunitaria
+docker compose -f docker-compose.yml exec db mysql -u comunitaria_user -p comunitaria
+```
+
+**Mainnet:**
+```bash
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec db mysql -u comunitaria_user -p comunitaria
 ```
 
 ### Restart Services

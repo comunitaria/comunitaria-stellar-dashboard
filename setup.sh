@@ -278,27 +278,74 @@ echo "  - .env (application configuration)"
 echo "  - docker-compose.override.yml (docker environment)"
 echo ""
 
+# Ask if user wants to build and start containers now
+read -p "Do you want to build and start the Docker containers now? (y/N): " start_now
+
+if [[ $start_now =~ ^[Yy]$ ]]; then
+    echo ""
+    echo -e "${GREEN}Building Docker images...${NC}"
+    
+    if [ "$STELLAR_NETWORK" = "testnet" ]; then
+        docker compose -f docker-compose.yml build --no-cache
+        echo ""
+        echo -e "${GREEN}Starting containers...${NC}"
+        docker compose -f docker-compose.yml up -d
+    else
+        docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
+        echo ""
+        echo -e "${GREEN}Starting containers...${NC}"
+        docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
+    fi
+    
+    echo ""
+    echo "Waiting for database to be ready..."
+    sleep 15
+    
+    # Ask if user wants to initialize the asset
+    read -p "Do you want to initialize the Stellar asset now? (y/N): " init_asset
+    if [[ $init_asset =~ ^[Yy]$ ]]; then
+        read -p "Enter initial supply amount: " amount
+        if [ ! -z "$amount" ]; then
+            echo "Initializing asset with supply: $amount"
+            if [ "$STELLAR_NETWORK" = "testnet" ]; then
+                docker compose -f docker-compose.yml exec app php scripts/setup_illa.php $amount
+            else
+                docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec app php scripts/setup_illa.php $amount
+            fi
+        fi
+    fi
+fi
+
+echo ""
+
 if [ "$STELLAR_NETWORK" = "testnet" ]; then
     echo -e "${YELLOW}Next steps for TESTNET:${NC}"
-    echo "  1. Start the application: docker-compose up -d"
-    echo "  2. Initialize the asset:"
-    echo "     docker-compose exec app php scripts/setup_illa.php 10000"
-    echo "  3. Access the dashboard at: ${APP_BASE_URL}"
-    echo "  4. Default credentials: adm / 1 (change immediately!)"
+    if [[ ! $start_now =~ ^[Yy]$ ]]; then
+        echo "  1. Build and start: docker compose -f docker-compose.yml build && docker compose -f docker-compose.yml up -d"
+        echo "  2. Initialize the asset:"
+        echo "     docker compose -f docker-compose.yml exec app php scripts/setup_illa.php 10000"
+    else
+        echo "  Containers are running!"
+    fi
+    echo "  Access the dashboard at: ${APP_BASE_URL}"
+    echo "  Default credentials: adm / 1 (change immediately!)"
 else
     echo -e "${RED}Next steps for MAINNET:${NC}"
     echo "  1. VERIFY your Issuer and Distributor accounts are funded with XLM"
-    echo "  2. Start the application: docker-compose up -d"
-    echo "  3. Initialize the asset:"
-    echo "     docker-compose exec app php scripts/setup_illa.php <amount>"
-    echo "  4. Set up SSL/TLS (use nginx-proxy or traefik)"
-    echo "  5. Configure CORS_ALLOWED_ORIGINS in .env with your real domains"
-    echo "  6. Access the dashboard at: ${APP_BASE_URL}"
-    echo "  7. Default credentials: adm / 1 (CHANGE IMMEDIATELY!)"
+    if [[ ! $start_now =~ ^[Yy]$ ]]; then
+        echo "  2. Build and start: docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build && docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d"
+        echo "  3. Initialize the asset:"
+        echo "     docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec app php scripts/setup_illa.php <amount>"
+    else
+        echo "  Containers are running!"
+    fi
+    echo "  4. Configure CORS_ALLOWED_ORIGINS in .env with your real domains"
+    echo "  5. Access the dashboard at: ${APP_BASE_URL}"
+    echo "  6. Default credentials: adm / 1 (CHANGE IMMEDIATELY!)"
     echo ""
     echo -e "${RED}SECURITY WARNINGS:${NC}"
-    echo "  - Never commit .env to version control"
-    echo "  - Set file permissions: chmod 600 .env"
+    echo "  - Never commit .env or compose.env to version control"
+    echo "  - Set file permissions: chmod 600 .env compose.env"
     echo "  - Use a secrets manager for production"
     echo "  - Enable app.forceGlobalSecureRequests in .env"
     echo "  - Set up regular database backups"
