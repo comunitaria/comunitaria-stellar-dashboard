@@ -78,6 +78,12 @@ require rtrim($paths->systemDirectory, '\\/ ') . DIRECTORY_SEPARATOR . 'bootstra
 require_once SYSTEMPATH . 'Config/DotEnv.php';
 (new CodeIgniter\Config\DotEnv(ROOTPATH))->load();
 
+// Define application environment from .env (development/testing/production)
+// This is required by the framework to load the correct boot file.
+if (! defined('ENVIRONMENT')) {
+    define('ENVIRONMENT', env('CI_ENVIRONMENT', 'production'));
+}
+
 // Grab our CodeIgniter
 $app = Config\Services::codeigniter();
 $app->initialize();

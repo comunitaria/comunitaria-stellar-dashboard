@@ -190,7 +190,52 @@ El proceso "cron" debe ser ejecutado cada 5 minutos, implementando la supercisi√
 
 A la mayor brevedad, cambie esta contrase√±a trivial en su perfil de usuario.
 
+---
 
-# To run in development
+## Docker Deployment (Recommended)
 
+For a complete containerized deployment with MariaDB, automated setup, and production-ready configuration, see [DOCKER.md](DOCKER.md).
+
+### Quick Start with Docker
+
+```bash
+# Run interactive setup
+./setup.sh
+
+# Or use automated deployment
+./deploy.sh
+```
+
+The setup script will guide you through:
+- Stellar network selection (testnet/mainnet)
+- Database configuration
+- Email setup for password recovery
+- JWT configuration for mobile API
+- Stellar keypair configuration
+- Asset initialization
+
+### Manual Docker Setup
+
+```bash
+# 1. Start services
+docker-compose up -d
+
+# 2. Initialize Stellar asset
+docker-compose exec app php scripts/setup_illa.php 10000
+
+# 3. Access at http://localhost:8080
+```
+
+For detailed Docker documentation, deployment options, troubleshooting, and production configuration, refer to [DOCKER.md](DOCKER.md).
+
+---
+
+## Development (Local PHP)
+
+To run in development without Docker:
+
+```bash
 php spark serve
+```
+
+Make sure you have PHP 8.0+, MariaDB 10.4+, and Composer installed.

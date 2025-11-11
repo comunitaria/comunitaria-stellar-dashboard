@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: comunitaria-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=${DB_DATABASE:-comunitaria}
+      - DB_USERNAME=${DB_USERNAME:-comunitaria_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secure_password}
+    volumes:
+      - ./:/var/www/html
+      - ./writable:/var/www/html/writable
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - comunitaria-network
+
+  db:
+    image: mariadb:10.11
+    container_name: comunitaria-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${DB_DATABASE:-comunitaria}
+      MYSQL_USER: ${DB_USERNAME:-comunitaria_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secure_password}
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./app/Config/inicial.sql:/docker-entrypoint-initdb.d/inicial.sql
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - comunitaria-network
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: comunitaria-cron
+    restart: unless-stopped
+    command: >
+      sh -c "
+      echo '*/5 * * * * cd /var/www/html && php spark cron:run >> /var/www/html/writable/logs/cron.log 2>&1' | crontab - &&
+      crond -f -l 2
+      "
+    volumes:
+      - ./:/var/www/html
+      - ./writable:/var/www/html/writable
+    depends_on:
+      - app
+      - db
+    networks:
+      - comunitaria-network
+
+volumes:
+  db-data:
+    driver: local
+
+networks:
+  comunitaria-network:
+    driver: bridge

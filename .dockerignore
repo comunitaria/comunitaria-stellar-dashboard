@@ -1,0 +1,38 @@
+# Ignore environment files
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+
+# Ignore Docker volumes
+db-data/
+
+# Ignore writable directory contents
+writable/cache/*
+writable/logs/*
+writable/session/*
+writable/uploads/*
+!writable/cache/index.html
+!writable/logs/index.html
+!writable/session/index.html
+!writable/uploads/index.html
+
+# Ignore vendor
+vendor/
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore backup files
+*.backup.*
+*.bak
+*.sql.gz
+
+# Ignore test/debug files
+tests/_output/*
+phpunit.xml
