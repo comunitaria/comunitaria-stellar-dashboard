@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Quick deployment script for Comunitaria Stellar Dashboard
-# This script automates the entire deployment process
+# This script automates the entire deployment process for testnet, NOT PRODUCTION
 
 set -e
 

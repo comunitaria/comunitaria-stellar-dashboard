@@ -52,9 +52,10 @@ fi
 cp docker/nginx-initial.conf docker/nginx.conf
 echo "✅ Using HTTP-only nginx configuration"
 
-# Create ssl directory
+# Create ssl and certbot directories
 mkdir -p docker/ssl
-echo "✅ Created SSL directory"
+mkdir -p docker/certbot-webroot
+echo "✅ Created SSL and certbot directories"
 
 echo ""
 echo "🚀 Step 2: Starting containers with HTTP-only configuration..."

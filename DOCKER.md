@@ -2,6 +2,70 @@
 
 ## Quick Start
 
+### Production Deployment (with SSL)
+
+**Complete deployment sequence for mainnet with HTTPS:**
+
+```bash
+# 1. Run the interactive setup
+./setup.sh
+# - Choose: mainnet
+# - Configure database, Stellar accounts, etc.
+# - When asked "Build and start containers?", answer NO
+
+# 2. Build the containers (don't start yet)
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build
+
+# 3. Run SSL setup script (handles certificate acquisition)
+sudo ./setup-ssl.sh
+# This will:
+# - Start containers with HTTP-only nginx
+# - Obtain SSL certificate from Let's Encrypt
+# - Switch to HTTPS configuration automatically
+
+# 4. Initialize the Stellar asset
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec app \
+  php scripts/setup_illa.php 1000000
+```
+
+**Access your dashboard at:** `https://dashboard.comunitaria.com`
+
+---
+
+### Testnet Deployment (Simple, No SSL)
+
+**For development/testing:**
+
+```bash
+# 1. Run the interactive setup
+./setup.sh
+# - Choose: testnet
+# - Configure database, Stellar accounts, etc.
+# - When asked "Build and start containers?", answer YES
+
+# 2. Initialize the Stellar asset (if not done by setup.sh)
+docker compose -f docker-compose.yml exec app php scripts/setup_illa.php 10000
+```
+
+**Access your dashboard at:** `http://localhost:8080`
+
+---
+
+### Alternative: Using deploy.sh
+
+**⚠️ Note:** `deploy.sh` is for **testnet only** and does NOT support SSL setup.
+
+```bash
+# Only for testnet/development
+./deploy.sh
+```
+
+**For production with SSL, use the manual steps above or `setup-ssl.sh`.**
+
+---
+
+## Detailed Setup Instructions
+
 ### 1. Run the Interactive Setup
 ```bash
 ./setup.sh
@@ -14,8 +78,10 @@ This will guide you through:
 - Generating JWT secrets for API
 - Configuring Stellar keypairs (issuer/distributor)
 - Setting XLM balance thresholds
-- Optional: Automatically build and start containers
+- Optional: Automatically build and start containers (recommended for testnet)
 - Optional: Initialize the Stellar asset
+
+**Important for Production:** When deploying mainnet with SSL, answer NO when asked to build/start containers. You'll use `setup-ssl.sh` instead.
 
 **Note:** The script uses `compose.env` for Docker Compose environment variables (separate from application `.env`).
 

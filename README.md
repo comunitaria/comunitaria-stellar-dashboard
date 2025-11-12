@@ -194,41 +194,57 @@ A la mayor brevedad, cambie esta contraseña trivial en su perfil de usuario.
 
 ## Docker Deployment (Recommended)
 
-For a complete containerized deployment with MariaDB, automated setup, and production-ready configuration, see [DOCKER.md](DOCKER.md).
+For a complete containerized deployment with MariaDB, automated setup, and production-ready configuration with SSL, see [DOCKER.md](DOCKER.md).
 
-### Quick Start with Docker
+### Production Deployment (with SSL)
+
+For mainnet deployment with HTTPS:
 
 ```bash
-# Run interactive setup
+# 1. Run interactive setup (choose mainnet, answer NO to auto-start)
 ./setup.sh
 
-# Or use automated deployment
+# 2. Build containers
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build
+
+# 3. Run SSL setup (obtains Let's Encrypt certificate)
+sudo ./setup-ssl.sh
+
+# 4. Initialize Stellar asset
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec app \
+  php scripts/setup_illa.php 1000000
+```
+
+**Access at:** `https://dashboard.comunitaria.com`
+
+### Testnet Deployment (Simple)
+
+For development/testing without SSL:
+
+```bash
+# Run interactive setup (choose testnet, answer YES to auto-start)
+./setup.sh
+
+# Or use automated deployment script (testnet only)
 ./deploy.sh
 ```
+
+**Access at:** `http://localhost:8080`
+
+**Important:** `deploy.sh` is for testnet only and does NOT support SSL setup. For production with SSL, use the manual steps above.
+
+### What setup.sh does
 
 The setup script will guide you through:
 - Stellar network selection (testnet/mainnet)
 - Database configuration
 - Email setup for password recovery
 - JWT configuration for mobile API
-- Stellar keypair configuration
-- Asset initialization
+- Stellar keypair configuration (with generation instructions)
+- Asset initialization (optional)
+- Automatic container build and start (optional, recommended for testnet)
 
-### Manual Docker Setup
-
-```bash
-# 1. Start services
-docker-compose up -d
-
-docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# 2. Initialize Stellar asset
-docker-compose exec app php scripts/setup_illa.php 10000
-
-# 3. Access at http://localhost:8080
-```
-
-For detailed Docker documentation, deployment options, troubleshooting, and production configuration, refer to [DOCKER.md](DOCKER.md).
+For detailed Docker documentation, deployment options, troubleshooting, and SSL setup guide, refer to [DOCKER.md](DOCKER.md) and [SSL-SETUP.md](SSL-SETUP.md).
 
 ---
 
