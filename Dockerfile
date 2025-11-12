@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libgmp-dev \
     zip \
     unzip \
+    cron \
     mariadb-client \
     && docker-php-ext-install pdo_mysql mysqli mbstring exif pcntl bcmath gd intl gmp \
     && a2enmod rewrite headers \
