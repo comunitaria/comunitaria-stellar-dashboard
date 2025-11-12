@@ -7,13 +7,8 @@ services:
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8080}:80"
-    environment:
-      - DB_HOST=db
-      - DB_DATABASE=${DB_DATABASE:-comunitaria}
-      - DB_USERNAME=${DB_USERNAME:-comunitaria_user}
-      - DB_PASSWORD=${DB_PASSWORD:-secure_password}
     volumes:
-      - ./:/var/www/html
+      - ./.env:/var/www/html/.env
       - ./writable:/var/www/html/writable
     depends_on:
       db:

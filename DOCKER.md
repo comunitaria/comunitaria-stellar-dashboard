@@ -98,14 +98,17 @@ docker compose -f docker-compose.yml up -d
 
 **For Mainnet (production):**
 ```bash
-# Build images (includes nginx + SSL support)
+# Build images (this installs all Composer dependencies)
 docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
 
 # Start containers
 docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-**Important:** Use `--env-file compose.env` for production to avoid conflicts with the application's `.env` file.
+**Important:** 
+- Use `--env-file compose.env` for production to avoid conflicts with the application's `.env` file
+- The `build` step automatically installs all PHP dependencies via Composer
+- Permissions are automatically fixed on container startup
 
 ### 3. Initialize the Stellar Asset (if not done by setup.sh)
 

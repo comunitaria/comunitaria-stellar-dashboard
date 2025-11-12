@@ -204,10 +204,10 @@ For mainnet deployment with HTTPS:
 # 1. Run interactive setup (choose mainnet, answer NO to auto-start)
 ./setup.sh
 
-# 2. Build containers
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build
+# 2. Build containers (this installs all dependencies)
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
 
-# 3. Run SSL setup (obtains Let's Encrypt certificate)
+# 3. Run SSL setup (obtains Let's Encrypt certificate and starts containers)
 sudo ./setup-ssl.sh
 
 # 4. Initialize Stellar asset
@@ -216,6 +216,8 @@ sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compo
 ```
 
 **Access at:** `https://dashboard.comunitaria.com`
+
+**Note:** The build process installs all Composer dependencies and sets correct permissions automatically.
 
 ### Testnet Deployment (Simple)
 
