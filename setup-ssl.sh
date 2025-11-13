@@ -43,12 +43,13 @@ echo "🔄 Step 1: Starting with HTTP-only nginx configuration..."
 echo "Stopping existing containers..."
 $COMPOSE_CMD down 2>/dev/null || true
 
-# Backup existing nginx config and use initial config
-if [ -f "docker/nginx.conf" ]; then
-    cp docker/nginx.conf docker/nginx.conf.backup
-    echo "✅ Backed up nginx.conf to nginx.conf.backup"
+# Backup the HTTPS nginx config if it exists and is different from initial
+if [ -f "docker/nginx.conf" ] && ! cmp -s docker/nginx.conf docker/nginx-initial.conf; then
+    cp docker/nginx.conf docker/nginx-https.conf
+    echo "✅ Backed up HTTPS nginx.conf to nginx-https.conf"
 fi
 
+# Use HTTP-only config for certificate acquisition
 cp docker/nginx-initial.conf docker/nginx.conf
 echo "✅ Using HTTP-only nginx configuration"
 
@@ -102,9 +103,38 @@ echo ""
 echo "🔄 Step 4: Switching to HTTPS configuration..."
 
 # Restore full nginx config with HTTPS
-if [ -f "docker/nginx.conf.backup" ]; then
+if [ -f "docker/nginx-https.conf" ]; then
+    cp docker/nginx-https.conf docker/nginx.conf
+    echo "✅ Restored full nginx configuration with HTTPS from backup"
+elif [ -f "docker/nginx.conf.backup" ]; then
+    # Legacy backup name support
     cp docker/nginx.conf.backup docker/nginx.conf
-    echo "✅ Restored full nginx configuration with HTTPS"
+    echo "✅ Restored full nginx configuration with HTTPS from legacy backup"
+else
+    # Try to get from git if no backup exists
+    echo "⚠️  No backup found, attempting to restore from git..."
+    if git show HEAD:docker/nginx.conf > /tmp/nginx-from-git.conf 2>/dev/null; then
+        # Check if git version has HTTPS (contains "listen 443")
+        if grep -q "listen 443" /tmp/nginx-from-git.conf; then
+            cp /tmp/nginx-from-git.conf docker/nginx.conf
+            echo "✅ Restored HTTPS nginx configuration from git"
+        else
+            echo "❌ Git version doesn't have HTTPS config either"
+            echo "You may need to manually configure nginx.conf with HTTPS"
+        fi
+        rm -f /tmp/nginx-from-git.conf
+    else
+        echo "❌ Could not restore HTTPS config"
+        echo "Manual action needed: Copy the full nginx.conf with HTTPS configuration"
+    fi
+fi
+
+# Verify HTTPS is configured
+if grep -q "listen 443" docker/nginx.conf; then
+    echo "✅ HTTPS configuration verified"
+else
+    echo "❌ WARNING: nginx.conf does not contain HTTPS configuration!"
+    echo "HTTPS will not work. Please restore the correct nginx.conf manually."
 fi
 
 # Restart nginx to apply new configuration

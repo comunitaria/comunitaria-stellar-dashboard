@@ -48,7 +48,7 @@ services:
     command: >
       sh -c "
       echo '*/5 * * * * cd /var/www/html && php spark cron:run >> /var/www/html/writable/logs/cron.log 2>&1' | crontab - &&
-      crond -f -l 2
+      cron -f
       "
     volumes:
       - ./:/var/www/html
