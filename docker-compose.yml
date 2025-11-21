@@ -51,7 +51,7 @@ services:
       cron -f
       "
     volumes:
-      - ./:/var/www/html
+      - ./.env:/var/www/html/.env
       - ./writable:/var/www/html/writable
     depends_on:
       - app
