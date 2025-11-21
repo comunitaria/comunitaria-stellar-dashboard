@@ -47,7 +47,7 @@ services:
     restart: unless-stopped
     command: >
       sh -c "
-      echo '*/5 * * * * cd /var/www/html && php index.php cron >> /var/www/html/writable/logs/cron.log 2>&1' | crontab - &&
+      echo '*/5 * * * * cd /var/www/html && /usr/local/bin/php index.php cron >> /var/www/html/writable/logs/cron.log 2>&1' | crontab - &&
       cron -f
       "
     volumes:
