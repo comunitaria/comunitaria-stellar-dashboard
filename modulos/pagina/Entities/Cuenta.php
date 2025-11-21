@@ -38,7 +38,18 @@ class Cuenta extends Entity
         $st=new Stellar();
         $ok=$st->crearCuenta('emisora',$this->clave,floatval(getenv('moneda.XLM.maximo')));
         if (!$ok['exito']){
-            log_message('error', 'Failed to create account on Stellar: '.print_r($ok, true));
+            $errorMsg = 'Failed to create account on Stellar. ';
+            if (isset($ok['mensaje']['causa'])) {
+                $errorDetails = $ok['mensaje']['causa'];
+                if (is_object($errorDetails)) {
+                    $txCode = method_exists($errorDetails, 'getResultCodesTransaction') ? $errorDetails->getResultCodesTransaction() : 'unknown';
+                    $opCodes = method_exists($errorDetails, 'getResultCodesOperation') ? $errorDetails->getResultCodesOperation() : [];
+                    $errorMsg .= 'Transaction: ' . $txCode . ', Operations: ' . json_encode($opCodes);
+                } else {
+                    $errorMsg .= 'Causa: ' . $errorDetails;
+                }
+            }
+            log_message('error', $errorMsg);
         } else {
             log_message('info', 'Successfully created account on Stellar for key: '.substr($this->clave, 0, 10).'...');
         }
