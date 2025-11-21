@@ -130,15 +130,20 @@ class Cron extends  BaseController
         foreach ($cuentasPendientes as $cuentaPendiente) {
             $cuenta=model('Modulos\Pagina\Models\Cls_cuentas')->find($cuentaPendiente->id);
             if (!is_null($cuenta)){
+                log_message('debug', 'Checking wallet: '.substr($cuenta->clave, 0, 10).'... (ID: '.$cuenta->id.')');
                 $cuenta->actualizaEstado();
+                log_message('debug', 'After update - creada: '.$cuenta->creada.', trustline: '.$cuenta->trustline.', autorizada: '.$cuenta->autorizada);
                 if ($cuenta->creada==1){
                     $cuentasActualizadas++;
                     // If the wallet was just created, ensure it has XLM
                     $cuenta->aseguraXLM();
+                    log_message('debug', 'Wallet activated and XLM ensured for account ID: '.$cuenta->id);
                 }
             }
         }
         $parametros->guarda('CRON_CUENTAS_ACTUALIZADAS',$cuentasActualizadas);
+        log_message('debug', 'Total wallets updated: '.$cuentasActualizadas.' out of '.count($cuentasPendientes).' pending');
+
         
         date_default_timezone_set('Europe/Madrid');
         $parametros->guarda('CRON_EJECUCION',date('d/m/Y H:i:s'));
