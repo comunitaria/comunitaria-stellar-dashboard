@@ -123,6 +123,23 @@ class Cron extends  BaseController
                 $unaCuenta->aseguraXLM();
             }
         }
+        
+        // Check wallets that are marked as "not created" to see if they've been created on Stellar network
+        $cuentasPendientes=$db->query("SELECT id FROM cuentas WHERE creada=0 AND clave IS NOT NULL AND clave<>''")->getResult();
+        $cuentasActualizadas=0;
+        foreach ($cuentasPendientes as $cuentaPendiente) {
+            $cuenta=model('Modulos\Pagina\Models\Cls_cuentas')->find($cuentaPendiente->id);
+            if (!is_null($cuenta)){
+                $cuenta->actualizaEstado();
+                if ($cuenta->creada==1){
+                    $cuentasActualizadas++;
+                    // If the wallet was just created, ensure it has XLM
+                    $cuenta->aseguraXLM();
+                }
+            }
+        }
+        $parametros->guarda('CRON_CUENTAS_ACTUALIZADAS',$cuentasActualizadas);
+        
         date_default_timezone_set('Europe/Madrid');
         $parametros->guarda('CRON_EJECUCION',date('d/m/Y H:i:s'));
         return $this->respond(['mensaje'=>'CRON Comunitaria V1.0'], 200);
