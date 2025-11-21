@@ -37,6 +37,11 @@ class Cuenta extends Entity
     public function create(){
         $st=new Stellar();
         $ok=$st->crearCuenta('emisora',$this->clave,floatval(getenv('moneda.XLM.maximo')));
+        if (!$ok['exito']){
+            log_message('error', 'Failed to create account on Stellar: '.print_r($ok, true));
+        } else {
+            log_message('info', 'Successfully created account on Stellar for key: '.substr($this->clave, 0, 10).'...');
+        }
         $this->actualizaEstado();
     }
     public function autorizate(){
