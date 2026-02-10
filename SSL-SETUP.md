@@ -66,7 +66,13 @@ curl http://YOUR_SERVER_IP/
 #### Step 3: Obtain SSL certificate
 
 ```bash
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot \
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml --profile setup run --rm certbot-init
+```
+
+O con parámetros personalizados:
+
+```bash
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml --profile setup run --rm certbot-init \
   certonly --webroot \
   --webroot-path=/var/www/certbot \
   --email admin@comunitaria.com \
@@ -211,11 +217,11 @@ Para renovar manualmente:
 ./renew-certificates.sh
 ```
 
-O usando docker compose directamente:
+O forzando renovación inmediata:
 
 ```bash
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot-init renew
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml restart nginx
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec certbot certbot renew --force-renewal
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec nginx nginx -s reload
 ```
 
 ## Files Created/Modified

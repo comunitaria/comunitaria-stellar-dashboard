@@ -15,7 +15,7 @@ cd "$SCRIPT_DIR"
 echo "[$(date)] Checking for certificate renewal..."
 
 # Ejecutar renovación de certificados
-docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot-init renew --webroot --webroot-path=/var/www/certbot
+docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml run --rm --no-deps certbot renew --webroot --webroot-path=/var/www/certbot --force-renewal
 
 # Si la renovación fue exitosa, recargar nginx
 if [ $? -eq 0 ]; then

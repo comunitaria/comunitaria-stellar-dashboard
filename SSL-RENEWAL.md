@@ -56,8 +56,18 @@ crontab -l
 
 El [docker-compose.prod.yml](docker-compose.prod.yml:1) ahora incluye dos servicios:
 
-- **`certbot-init`**: Obtiene el certificado inicial (se ejecuta una sola vez)
-- **`certbot`**: Servicio continuo que verifica y renueva certificados cada 12 horas
+- **`certbot-init`**: Obtiene el certificado inicial (profile "setup", se ejecuta manualmente solo la primera vez)
+- **`certbot`**: Servicio continuo que verifica y renueva certificados cada 12 horas (se inicia automáticamente)
+
+### Primera vez - Obtener certificado inicial:
+```bash
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml --profile setup run --rm certbot-init
+```
+
+### Después - Iniciar servicios normalmente:
+```bash
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
 
 ## 🧪 Probar Renovación Manualmente
 
@@ -68,20 +78,22 @@ El [docker-compose.prod.yml](docker-compose.prod.yml:1) ahora incluye dos servic
 
 ### Con Docker Compose:
 ```bash
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot-init renew --webroot --webroot-path=/var/www/certbot
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml restart nginx
+# El servicio certbot renueva automáticamente cada 12h
+# Para forzar renovación inmediata:
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec certbot certbot renew --force-renewal
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec nginx nginx -s reload
 ```
 
 ### Dry-run (simular renovación sin hacerla):
 ```bash
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot-init renew --webroot --webroot-path=/var/www/certbot --dry-run
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec certbot certbot renew --dry-run
 ```
 
 ## 📊 Verificar Estado de Certificados
 
 ### Ver fecha de vencimiento:
 ```bash
-sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot-init certificates
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml exec certbot certbot certificates
 ```
 
 ### Ver información detallada:
@@ -107,6 +119,24 @@ sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compo
 ```
 
 ## 🚨 Troubleshooting
+
+### "Another instance of Certbot is already running"
+
+Si ves este error, detén los servicios y reinicia:
+```bash
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml down
+sudo docker compose --env-file compose.env -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+El servicio `certbot-init` ahora usa profile "setup" y no se ejecuta automáticamente.
+
+### "Connection refused" al obtener certificado
+
+Let's Encrypt no puede acceder a tu dominio. Verifica:
+1. DNS apunta a tu servidor: `dig dashboard.comunitaria.com +short`
+2. Puerto 80 abierto: `sudo ufw status` o `sudo firewall-cmd --list-all`
+3. Nginx corriendo: `sudo docker compose ps nginx`
+4. Accesible desde internet: `curl http://dashboard.comunitaria.com`
 
 ### Certificados no se renuevan
 

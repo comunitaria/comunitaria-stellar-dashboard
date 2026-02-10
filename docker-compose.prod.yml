@@ -31,6 +31,8 @@ services:
   certbot-init:
     image: certbot/certbot
     container_name: comunitaria-certbot-init
+    profiles:
+      - setup
     volumes:
       - ./docker/ssl:/etc/letsencrypt
       - ./docker/certbot-webroot:/var/www/certbot
