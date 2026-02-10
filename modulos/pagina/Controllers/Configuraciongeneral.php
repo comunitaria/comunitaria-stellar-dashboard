@@ -28,7 +28,7 @@ class Configuraciongeneral extends BaseController
         public function index()
         {
             //Vpconf> permiso index
-        if (!tienePermiso([1])) return view('no_autorizado');
+        if (!tienePermiso([1])) return redirect()->to('login');
 //Vpconf<
         $st=new Stellar();
         $this->data['emisora']=['clave'=>getenv('moneda.emisora.publica'),'XLM'=>0, 'cripto'=>0];

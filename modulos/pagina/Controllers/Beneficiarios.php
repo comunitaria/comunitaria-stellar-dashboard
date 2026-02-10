@@ -27,7 +27,7 @@ class Beneficiarios extends BaseController
         public function index()
         {
             //Vpconf> permiso index
-        if (!tienePermiso([2])) return view('no_autorizado');
+        if (!tienePermiso([2])) return redirect()->to('login');
 //Vpconf<
 
             if (strtolower($this->request->getMethod()) !== 'post') {

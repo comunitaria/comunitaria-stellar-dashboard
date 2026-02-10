@@ -28,7 +28,7 @@ class Usuarios extends BaseController
     public function index()
     {
         //Vpconf> permiso
-        if (!tienePermiso([2])) return view('no_autorizado');
+        if (!tienePermiso([2])) return redirect()->to('login');
 //Vpconf<
             if (strtolower($this->request->getMethod()) !== 'post') {
 
@@ -154,7 +154,7 @@ class Usuarios extends BaseController
         public function avatar()
         {
             //Vpconf> permiso avatar
-        if (!tienePermiso(0)) return view('no_autorizado');
+        if (!tienePermiso(0)) return redirect()->to('login');
 //Vpconf<
 
             if (strtolower($this->request->getMethod()) !== 'post') {

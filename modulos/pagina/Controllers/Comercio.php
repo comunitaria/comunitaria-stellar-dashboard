@@ -27,7 +27,7 @@ class Comercio extends BaseController
         public function editar($id=0)
         {
     //Vpconf> permiso editar
-        if (!tienePermiso([2])) return view('no_autorizado');
+        if (!tienePermiso([2])) return redirect()->to('login');
     //Vpconf<
 
             if (strtolower($this->request->getMethod()) !== 'post') {

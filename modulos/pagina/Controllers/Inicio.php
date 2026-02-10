@@ -27,7 +27,7 @@ class Inicio extends BaseController
         public function index()
         {
             //Vpconf> permiso index
-        if (!tienePermiso([0])) return view('no_autorizado');
+        if (!tienePermiso([0])) return redirect()->to('login');
 //Vpconf<
             $db=db_connect();
             $lista=$db->query('SELECT COUNT(id) as cuenta FROM beneficiarios WHERE activo=1')->getResult();

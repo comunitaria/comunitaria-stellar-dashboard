@@ -27,7 +27,7 @@ class Donaciones extends BaseController
         public function index()
         {
             //Vpconf> permiso index
-        if (!tienePermiso([4])) return view('no_autorizado');
+        if (!tienePermiso([4])) return redirect()->to('login');
 //Vpconf<
 
                 $this->data['VPConf']=config('VstPortal');

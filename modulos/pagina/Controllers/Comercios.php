@@ -27,7 +27,7 @@ class Comercios extends BaseController
         public function index()
         {
             //Vpconf> permiso index
-        if (!tienePermiso([2])) return view('no_autorizado');
+        if (!tienePermiso([2])) return redirect()->to('login');
 //Vpconf<
 
                 $this->data['comercios']=[];
@@ -49,7 +49,7 @@ class Comercios extends BaseController
                 return view('\Modulos\Pagina\vista_Comercios',$this->data);
         }
         public function crear(){
-            if (!tienePermiso([2])) return view('no_autorizado');
+            if (!tienePermiso([2])) return redirect()->to('login');
             $respuesta=['exito'=>false, 'mensaje'=>'Error indeterminado creando comercio', 'id'=>''];
             $db = \Config\Database::connect();
             $usuario=$this->request->getPost('ipUsuario');
@@ -93,7 +93,7 @@ class Comercios extends BaseController
         }
   
         public function modificar(){
-            if (!tienePermiso([2])) return view('no_autorizado');
+            if (!tienePermiso([2])) return redirect()->to('login');
             $id=intval($this->request->getPost('ipId')??'0');
             if ($id<=0){
                 return $this->crear();

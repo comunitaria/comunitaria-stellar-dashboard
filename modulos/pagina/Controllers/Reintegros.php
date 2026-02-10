@@ -27,7 +27,7 @@ class Reintegros extends BaseController
         public function index()
         {
             //Vpconf> permiso index
-        if (!tienePermiso([3])) return view('no_autorizado');
+        if (!tienePermiso([3])) return redirect()->to('login');
 //Vpconf<
             $this->data['clases']=model('Modulos\Pagina\Models\Cls_clases')->findAll();
             $this->data['VPConf']=config('VstPortal');

@@ -30,7 +30,7 @@ class Grupos extends BaseController
     public function index()
     {
         //Vpconf> permiso
-        if (!tienePermiso([2])) return view('no_autorizado');
+        if (!tienePermiso([2])) return redirect()->to('login');
 //Vpconf<
             if (strtolower($this->request->getMethod()) !== 'post') {
                 $MGrupos=model('Modulos\Pagina\Models\Cls_grupos_p');
@@ -165,7 +165,7 @@ class Grupos extends BaseController
 
     public function modificar_grupo(){
         //Vpconf> permiso modificar
-        if (!tienePermiso([2])) return view('no_autorizado');
+        if (!tienePermiso([2])) return redirect()->to('login');
         //Vpconf<
             if (strtolower($this->request->getMethod()) !== 'post') {
                 $uri = current_url(true);
