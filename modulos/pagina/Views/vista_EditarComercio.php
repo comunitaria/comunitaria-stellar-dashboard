@@ -152,7 +152,7 @@
                                                 <label for="ipDireccion" class="mb-0 form-label">Dirección
                                                     <div class="text-xs">Dirección que se proporcionará a los beneficiarios en la app</div>
                                                 </label>
-                                                <textarea class="form-control" id="ipDireccion" name="ipDireccion" value="<?= $comercio['direccion'] ?>"></textarea>
+                                                <textarea class="form-control" id="ipDireccion" name="ipDireccion"><?= $comercio['direccion'] ?></textarea>
                                             </div>
                                             <div class="col">
                                                 <label for="ipCoordenadas" class="mb-0 form-label">Coordenadas
