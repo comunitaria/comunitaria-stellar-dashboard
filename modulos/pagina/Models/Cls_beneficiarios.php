@@ -13,7 +13,7 @@ class Cls_parametros extends Model
     protected $returnType     = \Modulos\Pagina\Entities\Beneficiario::class; 
     protected $useSoftDeletes = true;
 
-    protected $allowedFields = ['usuario','contrasena','clase','nombre','apellidos','direccion','movil','correo','cuenta','bloqueado','activo','transferirILLA','recibidoILLA'];
+    protected $allowedFields = ['usuario','contrasena','clase','nombre','apellidos','direccion','movil','correo','cuenta','bloqueado','activo','transferirILLA','recibidoILLA','keystore'];
 
     // Dates
     protected $useTimestamps = true;

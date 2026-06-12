@@ -13,7 +13,7 @@ class Cls_comercios extends Model
     protected $returnType     = \Modulos\Pagina\Entities\Comercio::class; 
     protected $useSoftDeletes = true;
 
-    protected $allowedFields = ['usuario','contrasena','nombre','CIF','direccion','movil','correo','contacto','coordenadas','logo','cuenta','hashDatos','bloqueado','activo','transferirILLA','recibidoILLA','pagadoILLA','canjeadoILLA'];
+    protected $allowedFields = ['usuario','contrasena','nombre','CIF','direccion','movil','correo','contacto','coordenadas','logo','cuenta','hashDatos','bloqueado','activo','transferirILLA','recibidoILLA','pagadoILLA','canjeadoILLA','keystore','tokenConsulta'];
 
     // Dates
     protected $useTimestamps = true;

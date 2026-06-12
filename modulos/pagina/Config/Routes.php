@@ -57,7 +57,18 @@ $routes->group('/api/v1.0',['filter' => 'cors'], static function (RouteCollectio
     $routes->get('comercio/(:segment)', '\Modulos\Pagina\Controllers\Api::infoComercio/$1');
     $routes->get('comercios', '\Modulos\Pagina\Controllers\Api::comercios');
     $routes->get('usuario', '\Modulos\Pagina\Controllers\Api::consultaUsuario');
+    $routes->get('keystore', '\Modulos\Pagina\Controllers\Api::consultaKeystore');
+    $routes->post('keystore', '\Modulos\Pagina\Controllers\Api::guardarKeystore');
+    $routes->get('tokenConsulta', '\Modulos\Pagina\Controllers\Api::tokenConsulta');
 });
+
+// Página pública de SOLO LECTURA del saldo de un comercio (para empleados).
+// No requiere login: solo muestra datos que ya son públicos on-chain.
+$routes->get('/saldo/(:segment)', '\Modulos\Pagina\Controllers\Saldo::index/$1');
+$routes->get('/saldo/(:segment)/qr', '\Modulos\Pagina\Controllers\Saldo::qr/$1');
+
+// Apartado admin: enlaces/QR de consulta de saldo por comercio activo.
+$routes->get('/saldos', '\Modulos\Pagina\Controllers\Saldos::index'); //Vpconf: ['EnlacesSaldo','meBPuc','2']
 
 
 

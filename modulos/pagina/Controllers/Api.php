@@ -314,6 +314,89 @@ class Api extends \Modulos\Vpbasicos\Controllers\Apibase
         }
           
     }
+    // Devuelve el monedero cifrado (keystore) del usuario autentificado, o '' si no tiene.
+    // El blob es opaco para el servidor: se cifra/descifra en el cliente con la contraseña.
+    public function consultaKeystore(){
+        $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
+        $res=$this->autentifica();
+        if ($res['tipo']=='exito'){
+            $resUsuario=$this->usuarioCorrecto($res['usuario']);
+            if ($resUsuario!='OK'){
+                $respuesta['mensaje']=$resUsuario;
+                return $this->respond($respuesta, 400);
+            }
+            $usuario=$this->esBeneficiario?$this->beneficiario:$this->comercio;
+            return $this->respond(['keystore'=>$usuario->keystore??''], 200);
+        }
+        else{
+            return $this->respond($res, 401);
+        }
+    }
+    // Guarda el monedero cifrado (keystore) del usuario autentificado.
+    public function guardarKeystore(){
+        $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
+        $res=$this->autentifica();
+        if ($res['tipo']=='exito'){
+            $resUsuario=$this->usuarioCorrecto($res['usuario']);
+            if ($resUsuario!='OK'){
+                $respuesta['mensaje']=$resUsuario;
+                return $this->respond($respuesta, 400);
+            }
+            $usuario=$this->esBeneficiario?$this->beneficiario:$this->comercio;
+            $blob=$this->request->getPost('keystore');
+            if (is_null($blob)){
+                $cuerpo=$this->request->getJSON(true);
+                $blob=is_array($cuerpo)?($cuerpo['keystore']??null):null;
+            }
+            if (is_null($blob)||$blob===''){
+                $respuesta['mensaje']='Falta el keystore';
+                return $this->respond($respuesta, 400);
+            }
+            if (strlen($blob)>20000){
+                $respuesta['mensaje']='Keystore demasiado grande';
+                return $this->respond($respuesta, 400);
+            }
+            $usuario->keystore=$blob;
+            $usuario->miModelo()->update($usuario->id,['keystore'=>$blob]);
+            return $this->respond(['tipo'=>'exito','mensaje'=>'Keystore guardado'], 200);
+        }
+        else{
+            return $this->respond($res, 401);
+        }
+    }
+    // Devuelve (creándolo si hace falta) el token de consulta de saldo del comercio.
+    // Con ese token, los empleados acceden a /saldo/<token> (solo lectura), sin la
+    // clave privada. Solo aplica a comercios.
+    public function tokenConsulta(){
+        $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
+        $res=$this->autentifica();
+        if ($res['tipo']=='exito'){
+            $resUsuario=$this->usuarioCorrecto($res['usuario']);
+            if ($resUsuario!='OK'){
+                $respuesta['mensaje']=$resUsuario;
+                return $this->respond($respuesta, 400);
+            }
+            if ($this->esBeneficiario){
+                $respuesta['mensaje']='Solo los comercios tienen consulta de saldo para empleados';
+                return $this->respond($respuesta, 400);
+            }
+            $comercio=$this->comercio;
+            $token=$comercio->tokenConsulta;
+            if (is_null($token)||$token===''){
+                $token=bin2hex(random_bytes(16));
+                $comercio->tokenConsulta=$token;
+                $comercio->miModelo()->update($comercio->id,['tokenConsulta'=>$token]);
+            }
+            return $this->respond([
+                'tipo'=>'exito',
+                'token'=>$token,
+                'url'=>base_url('saldo/'.$token)
+            ], 200);
+        }
+        else{
+            return $this->respond($res, 401);
+        }
+    }
     public function consultaUsuario(){
         $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
         $res=$this->autentifica();
