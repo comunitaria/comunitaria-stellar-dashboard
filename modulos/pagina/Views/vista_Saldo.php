@@ -66,7 +66,7 @@
     <div class="card">
         <p class="etiqueta">Cartel para el mostrador</p>
         <div class="qrbox"><img src="<?= esc($urlQr, 'attr') ?>" alt="QR de consulta de saldo"></div>
-        <p class="pie">Escaneá este QR para ver el saldo en vivo</p>
+        <p class="pie">Escanea este QR para ver el saldo en vivo</p>
         <div class="dir"><?= esc($clavePublica) ?></div>
         <div class="acciones noprint">
             <button onclick="window.print()">Imprimir</button>
