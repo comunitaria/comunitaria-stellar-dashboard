@@ -13,7 +13,7 @@ class Cls_cuentas extends Model
     protected $returnType     = \Modulos\Pagina\Entities\Cuenta::class; 
     protected $useSoftDeletes = false;
 
-    protected $allowedFields = ['clave','balanceXLM','balanceILLA','creada','trustline','autorizada','bloqueada'];
+    protected $allowedFields = ['clave','balanceXLM','balanceILLA','creada','trustline','autorizada','bloqueada','secretoCifrado'];
 
     // Dates
     protected $useTimestamps = false;

@@ -7,6 +7,7 @@ use Soneso\StellarSDK\Memo;
 use Soneso\StellarSDK\PaymentOperationBuilder;
 use Soneso\StellarSDK\CreateAccountOperationBuilder;
 use Soneso\StellarSDK\AllowTrustOperationBuilder;
+use Soneso\StellarSDK\ChangeTrustOperationBuilder;
 use Soneso\StellarSDK\TransactionBuilder;
 use Soneso\StellarSDK\AssetTypeCreditAlphanum4;
 use Soneso\StellarSDK\Crypto\KeyPair;
@@ -168,6 +169,31 @@ class Stellar
             return ['exito'=>false,'mensaje'=>$e->getMessage()];
         }
         
+    }
+    // ---- Custodia: firma con la clave de un usuario (no de gobernanza) ----
+    // $dePub/$aPub: públicas sin 'G'. $dePriv: privada sin 'S'.
+    public function pagaCustodiado($dePub, $dePriv, $aPub, $cantidad, $mensaje)
+    {
+        return $this->transfiereCriptoReal($dePub, $aPub, number_format($cantidad, 7), $dePriv, $mensaje);
+    }
+    // Establece la trustline a ILLA firmando con la clave del propio usuario.
+    public function estableceTrustlineCustodiado($pub, $priv)
+    {
+        try {
+            $cuentaDe = $this->sdk->requestAccount('G' . $pub);
+            $par = KeyPair::fromPrivateKey(StrKey::decodeSeed('S' . $priv));
+            $cripto = new AssetTypeCreditAlphanum4(getenv('moneda.nombre'), 'G' . getenv('moneda.emisora.publica'));
+            $op = (new ChangeTrustOperationBuilder($cripto))->build();
+            $transaction = (new TransactionBuilder($cuentaDe))->addOperation($op)->build();
+            $transaction->sign($par, $this->red);
+            $response = $this->sdk->submitTransaction($transaction);
+            return ['exito' => $response->isSuccessful(), 'mensaje' => ''];
+        } catch (HorizonRequestException $e) {
+            return ['exito' => false, 'mensaje' => $this->motivoErrorStellar($e->getHorizonErrorResponse())];
+        } catch (\Exception $e) {
+            log_message('debug', 'Excepcion trustline custodia: ' . $e->getMessage());
+            return ['exito' => false, 'mensaje' => $e->getMessage()];
+        }
     }
     public function desautorizarCuenta($a){
         return $this->autorizarCuenta($a,0);

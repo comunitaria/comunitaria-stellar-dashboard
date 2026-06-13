@@ -2,6 +2,8 @@
 namespace Modulos\Pagina\Controllers;
 use App\Controllers\BaseController;
 use CodeIgniter\API\ResponseTrait;
+use Modulos\Pagina\Libraries\Custodia;
+use Modulos\Pagina\Entities\Cuenta;
 
 class Api extends \Modulos\Vpbasicos\Controllers\Apibase
 {
@@ -397,6 +399,153 @@ class Api extends \Modulos\Vpbasicos\Controllers\Apibase
             return $this->respond($res, 401);
         }
     }
+    // Lee un parámetro de POST (form) o del cuerpo JSON.
+    private function param($nombre){
+        $v=$this->request->getPost($nombre);
+        if (is_null($v)){
+            $j=$this->request->getJSON(true);
+            $v=is_array($j)?($j[$nombre]??null):null;
+        }
+        return $v;
+    }
+    private function respMonedero($cuenta){
+        return [
+            'cripto'=>getenv('moneda.nombre'),
+            'emisora'=>'G'.getenv('moneda.emisora.publica'),
+            'distribuidora'=>'G'.getenv('moneda.distribuidora.publica'),
+            'cuenta'=>$cuenta->descripcion(),
+        ];
+    }
+    // ---- CUSTODIA: monedero, pago, canje y saldo del lado servidor ----
+
+    // Crea (o devuelve) el monedero custodiado del usuario autentificado.
+    // Si tenía una cuenta legacy con saldo, lo migra (reusa la lógica existente).
+    public function crearMonedero(){
+        $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
+        $res=$this->autentifica();
+        if ($res['tipo']!='exito') return $this->respond($res,401);
+        $resU=$this->usuarioCorrecto($res['usuario']);
+        if ($resU!='OK'){ $respuesta['mensaje']=$resU; return $this->respond($respuesta,400); }
+        $usuario=$this->esBeneficiario?$this->beneficiario:$this->comercio;
+
+        // ¿Ya tiene monedero custodiado y creado? Lo devolvemos.
+        $cuentaActual=$usuario->miCuenta();
+        if (!is_null($cuentaActual) && $cuentaActual->tieneCustodia()){
+            $cuentaActual->actualizaEstado();
+            if ($cuentaActual->creada==1){
+                return $this->respond($this->respMonedero($cuentaActual),200);
+            }
+        }
+
+        // Cuenta legacy con saldo: lo acumulamos para re-emitirlo a la nueva y bloqueamos la vieja.
+        if (!is_null($cuentaActual)){
+            $cuentaActual->actualizaEstado();
+            if ($cuentaActual->creada==1 && floatval($cuentaActual->balanceILLA)>0){
+                $usuario->transferirILLA+=$cuentaActual->balanceILLA;
+                $usuario->miModelo()->save($usuario);
+                $cuentaActual->bloqueate();
+            }
+        }
+
+        // Generar el par custodiado y registrar la cuenta.
+        $par=(new Custodia())->generarPar();
+        $cuenta=new Cuenta();
+        $cuenta->clave=$par['publica'];
+        $cuenta->guardaSecreto($par['privada']);
+        try{
+            $cuenta->id=model('Modulos\Pagina\Models\Cls_cuentas')->insert($cuenta);
+        }catch(\Exception $e){
+            $respuesta['mensaje']='No se pudo crear el monedero';
+            return $this->respond($respuesta,400);
+        }
+        $usuario->registraCuenta($cuenta);
+
+        // Fondear (emisora) + trustline (firma del usuario) + autorizar.
+        $cuenta->create();
+        $cuenta->estableceTrustline();
+        $cuenta->autorizate();
+
+        // Si había saldo a migrar y la cuenta quedó autorizada, re-emitirlo desde distribuidora.
+        if ($cuenta->autorizada==1 && $usuario->transferirILLA){
+            $cuenta->transferirCripto($usuario->transferirILLA);
+            $usuario->transferirILLA=0;
+            $usuario->miModelo()->save($usuario);
+        }
+
+        return $this->respond($this->respMonedero($cuenta),200);
+    }
+
+    // Pago de un beneficiario/usuario a un comercio. El servidor firma con la clave custodiada.
+    public function pagar(){
+        $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
+        $res=$this->autentifica();
+        if ($res['tipo']!='exito') return $this->respond($res,401);
+        $resU=$this->usuarioCorrecto($res['usuario']);
+        if ($resU!='OK'){ $respuesta['mensaje']=$resU; return $this->respond($respuesta,400); }
+        $usuario=$this->esBeneficiario?$this->beneficiario:$this->comercio;
+
+        $comercioId=$this->param('comercio');
+        $cantidad=$this->param('cantidad');
+        if (!is_numeric($cantidad)||floatval($cantidad)<=0){
+            $respuesta['mensaje']='Importe inválido'; return $this->respond($respuesta,400);
+        }
+        $comercio=model('Modulos\Pagina\Models\Cls_comercios')->find($comercioId);
+        if (is_null($comercio)){ $respuesta['mensaje']='Comercio no encontrado'; return $this->respond($respuesta,400); }
+        $destino=$comercio->miCuenta();
+        if (is_null($destino)){ $respuesta['mensaje']='El comercio no tiene monedero'; return $this->respond($respuesta,400); }
+        $origen=$usuario->miCuenta();
+        if (is_null($origen)||!$origen->tieneCustodia()){
+            $respuesta['mensaje']='Tu monedero no está custodiado'; return $this->respond($respuesta,400);
+        }
+        $r=$origen->paga($destino->clave,floatval($cantidad),'Compra');
+        if ($r['exito']){
+            return $this->respond(['tipo'=>'exito','mensaje'=>'Pago realizado','cuenta'=>$origen->descripcion()],200);
+        }
+        $respuesta['mensaje']=$r['mensaje'];
+        return $this->respond($respuesta,400);
+    }
+
+    // Canje: el comercio transfiere ILLA a la distribuidora. Firma server-side.
+    public function canjear(){
+        $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
+        $res=$this->autentifica();
+        if ($res['tipo']!='exito') return $this->respond($res,401);
+        $resU=$this->usuarioCorrecto($res['usuario']);
+        if ($resU!='OK'){ $respuesta['mensaje']=$resU; return $this->respond($respuesta,400); }
+        if ($this->esBeneficiario){ $respuesta['mensaje']='Solo los comercios pueden canjear'; return $this->respond($respuesta,400); }
+        $comercio=$this->comercio;
+        $cantidad=$this->param('cantidad');
+        if (!is_numeric($cantidad)||floatval($cantidad)<=0){
+            $respuesta['mensaje']='Importe inválido'; return $this->respond($respuesta,400);
+        }
+        $cuenta=$comercio->miCuenta();
+        if (is_null($cuenta)||!$cuenta->tieneCustodia()){
+            $respuesta['mensaje']='El monedero no está custodiado'; return $this->respond($respuesta,400);
+        }
+        $r=$cuenta->paga(getenv('moneda.distribuidora.publica'),floatval($cantidad),'Reintegro');
+        if ($r['exito']){
+            return $this->respond(['tipo'=>'exito','mensaje'=>'Canje realizado','cuenta'=>$cuenta->descripcion()],200);
+        }
+        $respuesta['mensaje']=$r['mensaje'];
+        return $this->respond($respuesta,400);
+    }
+
+    // Saldo en vivo (Horizon) del monedero del usuario autentificado.
+    public function saldoUsuario(){
+        $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
+        $res=$this->autentifica();
+        if ($res['tipo']!='exito') return $this->respond($res,401);
+        $resU=$this->usuarioCorrecto($res['usuario']);
+        if ($resU!='OK'){ $respuesta['mensaje']=$resU; return $this->respond($respuesta,400); }
+        $usuario=$this->esBeneficiario?$this->beneficiario:$this->comercio;
+        $cuenta=$usuario->miCuenta();
+        if (is_null($cuenta)){
+            return $this->respond(['tipo'=>'exito','cuenta'=>null],200);
+        }
+        $cuenta->actualizaEstado();
+        return $this->respond(['tipo'=>'exito','cuenta'=>$cuenta->descripcion()],200);
+    }
+
     public function consultaUsuario(){
         $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
         $res=$this->autentifica();

@@ -1,11 +1,42 @@
 <?php
 namespace Modulos\Pagina\Entities;
 use Modulos\Pagina\Libraries\Stellar;
+use Modulos\Pagina\Libraries\Custodia;
 
 use CodeIgniter\Entity\Entity;
 
 class Cuenta extends Entity
 {
+    // ---- Custodia ----
+    public function tieneCustodia(){
+        return !empty($this->secretoCifrado);
+    }
+    // Cifra y guarda el secreto (55 chars sin S). No persiste por sí solo:
+    // el llamador hace save() de la cuenta.
+    public function guardaSecreto($secreto){
+        $this->secretoCifrado=(new Custodia())->cifra($secreto);
+    }
+    // Devuelve el secreto en claro (55 chars sin S). Solo para firmar, en memoria.
+    public function obtenSecreto(){
+        return (new Custodia())->descifra($this->secretoCifrado);
+    }
+    // Establece la trustline a ILLA firmando con la clave custodiada de la cuenta.
+    public function estableceTrustline(){
+        $st=new Stellar();
+        $ok=$st->estableceTrustlineCustodiado($this->clave,$this->obtenSecreto());
+        $this->actualizaEstado();
+        return $ok;
+    }
+    // Paga ILLA desde esta cuenta a $destinoSinG, firmando con su clave custodiada.
+    public function paga($destinoSinG,$cantidad,$mensaje){
+        $st=new Stellar();
+        $respuesta=$st->pagaCustodiado($this->clave,$this->obtenSecreto(),$destinoSinG,$cantidad,$mensaje);
+        if ($respuesta['exito']){
+            $this->actualizaEstado();
+        }
+        return $respuesta;
+    }
+
     public function actualizaEstado(){
         $st=new Stellar();
         $balances=$st->balances($this->clave);

@@ -60,6 +60,11 @@ $routes->group('/api/v1.0',['filter' => 'cors'], static function (RouteCollectio
     $routes->get('keystore', '\Modulos\Pagina\Controllers\Api::consultaKeystore');
     $routes->post('keystore', '\Modulos\Pagina\Controllers\Api::guardarKeystore');
     $routes->get('tokenConsulta', '\Modulos\Pagina\Controllers\Api::tokenConsulta');
+    // Custodia (firma server-side)
+    $routes->post('monedero', '\Modulos\Pagina\Controllers\Api::crearMonedero');
+    $routes->post('pagar', '\Modulos\Pagina\Controllers\Api::pagar');
+    $routes->post('canjear', '\Modulos\Pagina\Controllers\Api::canjear');
+    $routes->get('saldo', '\Modulos\Pagina\Controllers\Api::saldoUsuario');
 });
 
 // Página pública de SOLO LECTURA del saldo de un comercio (para empleados).
