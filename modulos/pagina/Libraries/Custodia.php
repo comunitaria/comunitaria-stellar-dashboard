@@ -2,6 +2,7 @@
 namespace Modulos\Pagina\Libraries;
 
 use Soneso\StellarSDK\Crypto\KeyPair;
+use Soneso\StellarSDK\Crypto\StrKey;
 
 /**
  * Custodia de claves Stellar de los usuarios.
@@ -28,6 +29,23 @@ class Custodia
             'publica' => substr($par->getAccountId(), 1),
             'privada' => substr($par->getSecretSeed(), 1),
         ];
+    }
+
+    /** Normaliza un secreto: quita la 'S' inicial si viene con ella (56 → 55). */
+    public function normalizaSecreto(string $secreto): string
+    {
+        $secreto = trim($secreto);
+        if (strlen($secreto) === 56 && ($secreto[0] === 'S')) {
+            return substr($secreto, 1);
+        }
+        return $secreto;
+    }
+
+    /** Devuelve la pública (55 chars sin G) que corresponde a un secreto (sin S). */
+    public function publicaDeSecreto(string $secretoSinS): string
+    {
+        $kp = KeyPair::fromPrivateKey(StrKey::decodeSeed('S' . $secretoSinS));
+        return substr($kp->getAccountId(), 1);
     }
 
     /**

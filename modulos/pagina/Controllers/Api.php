@@ -437,6 +437,22 @@ class Api extends \Modulos\Vpbasicos\Controllers\Apibase
             }
         }
 
+        // ADOPCIÓN (migración sin rotar): si el dispositivo manda el secreto de su
+        // wallet actual y coincide con la cuenta legacy ya registrada, lo custodiamos
+        // en esa MISMA cuenta. Misma dirección, sin re-emitir, historial intacto.
+        $secretoAdoptar=$this->param('secreto');
+        if (!is_null($secretoAdoptar) && $secretoAdoptar!=='' && !is_null($cuentaActual) && !$cuentaActual->tieneCustodia()){
+            $custodia=new Custodia();
+            $sec=$custodia->normalizaSecreto($secretoAdoptar);
+            $pubDerivada='';
+            try{ $pubDerivada=$custodia->publicaDeSecreto($sec); }catch(\Exception $e){ $pubDerivada=''; }
+            if ($pubDerivada!=='' && $pubDerivada===$cuentaActual->clave){
+                $cuentaActual->guardaSecreto($sec);
+                $cuentaActual->actualizaEstado(); // persiste (incluye secretoCifrado) y refresca estado
+                return $this->respond($this->respMonedero($cuentaActual),200);
+            }
+        }
+
         // Cuenta legacy con saldo: lo acumulamos para re-emitirlo a la nueva y bloqueamos la vieja.
         if (!is_null($cuentaActual)){
             $cuentaActual->actualizaEstado();
