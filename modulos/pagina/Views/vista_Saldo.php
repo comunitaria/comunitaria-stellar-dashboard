@@ -36,6 +36,12 @@
                  border-radius:10px; padding:10px 16px; cursor:pointer; }
         button:active { background:#f0f1f3; }
         .pie { text-align:center; font-size:.72rem; color:var(--gris); margin-top:8px; }
+        .movs { list-style:none; margin:6px 0 0; padding:0; text-align:left; }
+        .movs li { display:flex; align-items:baseline; gap:10px; padding:10px 2px; border-bottom:1px solid var(--borde); }
+        .movs li:last-child { border-bottom:none; }
+        .movnom { flex:1; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .movmonto { color:var(--verde); font-weight:700; white-space:nowrap; }
+        .movfecha { color:var(--gris); font-size:.72rem; white-space:nowrap; }
         @media print {
             body { background:#fff; }
             .noprint { display:none !important; }
@@ -63,6 +69,23 @@
     </div>
 
     <?php if ($clavePublica !== ''): ?>
+    <div class="card">
+        <p class="etiqueta">Últimos movimientos</p>
+        <?php if (empty($movimientos)): ?>
+            <p class="pie">Sin movimientos todavía</p>
+        <?php else: ?>
+            <ul class="movs">
+                <?php foreach ($movimientos as $m): ?>
+                    <li>
+                        <span class="movnom"><?= esc($m->nombre) ?></span>
+                        <span class="movmonto">+<?= number_format((float)$m->cantidad, 2) ?> <?= esc($moneda) ?></span>
+                        <span class="movfecha"><?= esc(date('d/m H:i', strtotime($m->momento))) ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </div>
+
     <div class="card">
         <p class="etiqueta">Cartel para el mostrador</p>
         <div class="qrbox"><img src="<?= esc($urlQr, 'attr') ?>" alt="QR de consulta de saldo"></div>

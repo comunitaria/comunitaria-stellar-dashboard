@@ -43,6 +43,8 @@ class Saldo extends BaseController
             $autorizada = $bal['autorizada'];
         }
 
+        $movimientos = model('Modulos\Pagina\Models\Cls_transacciones')->ultimasDeComercio($comercio->id, 10);
+
         $data = [
             'nombre'       => $comercio->nombre,
             'clavePublica' => $clave === '' ? '' : 'G' . $clave,
@@ -54,6 +56,7 @@ class Saldo extends BaseController
             'nodo'         => getenv('moneda.nodo.' . getenv('moneda.red')),
             'urlSaldo'     => base_url('saldo/' . $token),
             'urlQr'        => base_url('saldo/' . $token . '/qr'),
+            'movimientos'  => $movimientos,
         ];
 
         return view('\Modulos\Pagina\vista_Saldo', $data);
