@@ -81,6 +81,21 @@ class Cls_transacciones extends Model
         }
         return $lista;
       }
-    
+
+      // Últimos pagos ILLA recibidos por un comercio (compras de beneficiarios).
+      // Devuelve nombre (sin apellido), cantidad y momento.
+      public function ultimasDeComercio($comercioId, $limite=10){
+          $db=db_connect();
+          return $db->query(
+              "SELECT t.cantidad, t.momento, b.nombre
+                 FROM transacciones t
+                 JOIN beneficiarios b ON b.id=t.usuario
+                WHERE t.tipo=1 AND t.moneda=1 AND t.de_a_usuario=? AND t.de_a_tipoUsuario=2 AND t.tipoUsuario=1
+                ORDER BY t.momento DESC
+                LIMIT ".(int)$limite,
+              [$comercioId]
+          )->getResult();
+      }
+
 }
 ?>
