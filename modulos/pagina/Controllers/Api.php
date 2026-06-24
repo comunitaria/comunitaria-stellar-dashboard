@@ -562,6 +562,41 @@ class Api extends \Modulos\Vpbasicos\Controllers\Apibase
         return $this->respond(['tipo'=>'exito','cuenta'=>$cuenta->descripcion()],200);
     }
 
+    // Resuelve claves públicas (con G) al nombre de su titular, para mostrar la
+    // contraparte en la lista de movimientos de la app. Beneficiarios: solo nombre.
+    // Cuentas del sistema: 'ONG' (distribuidora) / 'Comunitaria' (emisora).
+    public function nombres(){
+        $res=$this->autentifica();
+        if ($res['tipo']!='exito') return $this->respond($res,401);
+        $claves=$this->param('claves');
+        if (!is_array($claves)) $claves=[];
+        $distrib=getenv('moneda.distribuidora.publica');
+        $emis=getenv('moneda.emisora.publica');
+        $resp=[];
+        $i=0;
+        foreach($claves as $claveConG){
+            if (++$i>200) break;
+            if (!is_string($claveConG)) continue;
+            $sinG=(strlen($claveConG)==56)?substr($claveConG,1):$claveConG;
+            if ($sinG===$distrib){ $resp[$claveConG]='ONG'; continue; }
+            if ($sinG===$emis){ $resp[$claveConG]='Comunitaria'; continue; }
+            $nombre='';
+            $cuenta=model('Modulos\Pagina\Models\Cls_cuentas')->where('clave',$sinG)->first();
+            if (!is_null($cuenta)){
+                $b=model('Modulos\Pagina\Models\Cls_beneficiarios')->where('cuenta',$cuenta->id)->first();
+                if (!is_null($b)){
+                    $nombre=$b->nombre;
+                }
+                else{
+                    $c=model('Modulos\Pagina\Models\Cls_comercios')->where('cuenta',$cuenta->id)->first();
+                    if (!is_null($c)){ $nombre=$c->nombre; }
+                }
+            }
+            $resp[$claveConG]=$nombre;
+        }
+        return $this->respond($resp,200);
+    }
+
     public function consultaUsuario(){
         $respuesta=['codigo'=>400,'tipo'=>'Error','mensaje'=>'Error indeterminado'];
         $res=$this->autentifica();
