@@ -30,8 +30,11 @@ class Comercios extends BaseController
         if (!tienePermiso([2])) return redirect()->to('login');
 //Vpconf<
 
+                helper(['Modulos\Pagina\formatos']);
                 $this->data['comercios']=[];
                 foreach(model('Modulos\Pagina\Models\Cls_comercios')->findAll() as $unComercio){
+                    $cuenta=model('Modulos\Pagina\Models\Cls_cuentas')->find($unComercio->cuenta);
+                    $saldo=formatoMoneda(is_null($cuenta)?0:$cuenta->balanceILLA);
                     $this->data['comercios'][]=[
                         $unComercio->id,
                         $unComercio->CIF,
@@ -42,6 +45,7 @@ class Comercios extends BaseController
                         $unComercio->movil,
                         $unComercio->correo,
                         $unComercio->activo,
+                        $saldo,
                     ];
                 }
 
