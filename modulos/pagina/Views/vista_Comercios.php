@@ -144,6 +144,19 @@
                                                 }
 JS,
                                         ],
+                                        [
+                                            'titulo'=>'Saldo',
+                                            'type'=> 'num',
+                                            'render'=>
+<<<JS
+                                                if ( type === "sort" || type === "type" || type === "filter" ) {
+                                                    return data;
+                                                }
+                                                else{
+                                                    return '<span class="ILLA">'+data+'</span>';
+                                                }
+JS,
+                                        ],
                                     ],
                                     'trClick'=>base_url('/comercio/editar').'/[Id]',
                                     'estilo'=>'hover striped col',
