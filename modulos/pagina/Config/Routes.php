@@ -65,6 +65,7 @@ $routes->group('/api/v1.0',['filter' => 'cors'], static function (RouteCollectio
     $routes->post('pagar', '\Modulos\Pagina\Controllers\Api::pagar');
     $routes->post('canjear', '\Modulos\Pagina\Controllers\Api::canjear');
     $routes->get('saldo', '\Modulos\Pagina\Controllers\Api::saldoUsuario');
+    $routes->post('nombres', '\Modulos\Pagina\Controllers\Api::nombres');
 });
 
 // Página pública de SOLO LECTURA del saldo de un comercio (para empleados).
