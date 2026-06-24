@@ -45,6 +45,12 @@ $RECYCLE.BIN/
 .vagrant
 Vagrantfile
 
+# Scripts con secretos (claves privadas / wallets generadas) — NO commitear.
+# (scripts/acunar.sh sí se versiona: no contiene secretos, los lee del .env)
+scripts/*.py
+scripts/*.csv
+scripts/*.json
+
 #-------------------------
 # Temporary Files
 #-------------------------

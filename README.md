@@ -171,6 +171,30 @@ $st = new \Modulos\Pagina\Libraries\Stellar();
 print_r($st->balances('CLAVE_DISTRIBUIDORA_SIN_G'));
 ```
 
+### Emitir ILLA (acuñar) — script `scripts/acunar.sh`
+
+Emitir ILLA es un **pago de la emisora a la distribuidora** del propio asset: la
+emisora crea la moneda al enviarla (no necesita saldo previo). Es el **paso 4** de
+arriba ("Emitir el activo"), pero automatizado: el script lee las claves del `.env`
+y firma con la emisora dentro del contenedor de la app.
+
+Ejecutar en el **servidor** (donde corre docker), desde la raíz del repo:
+```bash
+./scripts/acunar.sh <cantidad> [-y]
+```
+Ejemplos:
+```bash
+./scripts/acunar.sh 1000        # emite 1000 ILLA a la distribuidora (pide confirmación)
+./scripts/acunar.sh 1000 -y     # sin confirmación interactiva
+```
+Notas:
+- **Aumenta la oferta de ILLA en circulación** (decisión de gobernanza). Usalo cuando
+  la distribuidora se quede sin ILLA para distribuir/transferir a beneficiarios.
+- Requiere docker y el contenedor de la app corriendo (por defecto `comunitaria-app`;
+  se puede cambiar con `APP_CONTAINER=otro_nombre ./scripts/acunar.sh ...`).
+- No expone secretos: lee las claves del `.env` (que nunca se commitea) y firma dentro
+  del contenedor. Al terminar muestra el nuevo saldo ILLA de la distribuidora.
+
 ### Otras Configuraciones
 
 El proceso "cron" debe ser ejecutado cada 5 minutos, implementando la supercisión de la red. Para ello, se incluirá la siguiente línea en el fichero de configuración del demonio _cron_:
