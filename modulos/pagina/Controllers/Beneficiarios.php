@@ -184,12 +184,18 @@ class Beneficiarios extends BaseController
                             $beneficiario->recibidoILLA+=$cantidad;
                             model('Modulos\Pagina\Models\Cls_beneficiarios')->save($beneficiario);
                         }
+                        else if (!is_string($respuesta['mensaje'])){
+                            // transferirCripto devuelve un objeto 'causa' al fallar; lo dejamos legible.
+                            $respuesta['mensaje']='Error: la transferencia fue rechazada (verifique el saldo de la distribuidora)';
+                        }
                     }
                     else {
                         $respuesta['mensaje']='Error: el monedero no está disponible';
                     }
                 }
-                $respuesta['mensaje']='Error: el usuario no existe';
+                else {
+                    $respuesta['mensaje']='Error: el usuario no existe';
+                }
             }
             return json_encode($respuesta);
         }
